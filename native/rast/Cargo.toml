@@ -1,0 +1,27 @@
+[package]
+name = "rast"
+version = "0.1.0"
+edition = "2024"
+authors = ["Steve Roques <steve.roques@gmail.com>"]
+description = "SIMD raster tile kernels for Erlang via Rustler"
+license = "Apache-2.0"
+
+[lib]
+name = "rast"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.37"
+simdeez = "2.0.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+# NOTE: unlike sied, we do NOT set `panic = "abort"`. Raster kernels run on
+# real-world, sometimes-malformed data; a panic must unwind and be turned into
+# an Erlang error at the NIF boundary rather than take down the whole VM.
+strip = true
+
+[profile.dev]
+opt-level = 0

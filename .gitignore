@@ -1,0 +1,37 @@
+# Native NIF is a build artifact — built via `make build`, not committed.
+# (A future CI can ship per-platform prebuilt binaries like sied does.)
+priv/
+
+# ---> Erlang
+.rebar3
+_build
+_checkouts
+_vendor
+.eunit
+*.o
+*.beam
+*.plt
+*.swp
+*.swo
+.erlang.cookie
+ebin
+log
+erl_crash.dump
+logs
+.idea
+*.iml
+rebar3.crashdump
+*~
+
+# rebar 3
+_build/
+_checkouts/
+
+# ---> Rust
+native/rast/target/
+
+# ---> docs (generated)
+/doc/*.html
+/doc/*.css
+/doc/*.png
+/doc/edoc-info

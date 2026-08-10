@@ -1,0 +1,31 @@
+@title rast — SIMD raster tile processing for Erlang
+@version 0.1.0
+@copyright 2026 Steve Roques
+@doc
+
+== Overview ==
+
+rast processes large satellite raster scenes (Sentinel-2 / Landsat) on the BEAM
+using fused, typed, binary-first SIMD tile kernels under a bounded-memory OTP
+tiling layer.
+
+Two layers:
+
+<ul>
+  <li><b>Kernels</b> ({@link rast_nif}, façade {@link rast}) — bounded per-tile
+      operations in Rust. Binary-first, fused, and typed (`u16 -&gt; f32'
+      widening folded into the kernel).</li>
+  <li><b>Orchestration</b> ({@link rast_coordinator}, {@link rast_worker},
+      {@link rast_gdal}) — demand-driven tiling of a whole scene under a fixed
+      memory budget, with GDAL doing windowed I/O. Skeleton in this release.</li>
+</ul>
+
+Pure tile geometry lives in {@link rast_tiling}.
+
+== Design ==
+
+See `ARCHITECTURE.md' at the ecosystem root for the full rationale: why the API
+is binary-first, why kernels are fused and typed, the Erlang/Rust boundary, the
+tiling/backpressure strategy, multi-arch dispatch, and the incremental plan.
+
+@end
