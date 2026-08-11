@@ -3,8 +3,8 @@
 %%%
 %%% Empty for now: kernels are called directly and need no owning process.
 %%% Once the tiling orchestration lands, a per-scene supervisor
-%%% (`rast_coordinator` + a `rast_worker` pool) is started dynamically under a
-%%% `simple_one_for_one` child here, one subtree per scene/job.
+%%% (rast_coordinator + a rast_worker pool) is started dynamically under a
+%%% simple_one_for_one child here, one subtree per scene/job.
 -module(rast_sup).
 -behaviour(supervisor).
 

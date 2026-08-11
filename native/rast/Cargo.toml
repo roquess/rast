@@ -1,6 +1,6 @@
 [package]
 name = "rast"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Steve Roques <steve.roques@gmail.com>"]
 description = "SIMD raster tile kernels for Erlang via Rustler"

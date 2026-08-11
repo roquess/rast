@@ -1,6 +1,6 @@
 {application, rast, [
     {description, "SIMD raster tile processing for Erlang: fused typed kernels + bounded-memory OTP tiling"},
-    {vsn, "0.1.0"},
+    {vsn, "0.1.1"},
     {registered, [rast_sup]},
     {mod, {rast_app, []}},
     {applications, [kernel, stdlib]},
@@ -9,7 +9,6 @@
 
     {licenses, ["Apache-2.0"]},
     {links, [{"GitHub", "https://github.com/roquess/rast"}]},
-    {maintainers, ["Steve Roques <steve.roques@gmail.com>"]},
 
     {files, [
         "src",
@@ -21,5 +20,9 @@
         "priv/rast-darwin-aarch64.so",
         "priv/rast-windows-x86_64.dll",
         "rebar.config", "Makefile", "README*", "CHANGELOG*", "LICENSE*", "NOTICE*"
-    ]}
+    ]},
+
+    %% .so is hard-excluded by rebar3_hex (treated as a build artifact); force
+    %% the prebuilt Linux/macOS NIFs back in so the package works without cargo.
+    {include_paths, ["priv/rast-*.so"]}
 ]}.
