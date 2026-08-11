@@ -37,12 +37,15 @@ jobs:
         run: |
           cargo build --release --manifest-path native/rast/Cargo.toml
           mkdir -p priv
-          # Erlang loads NIFs as .so on all Unix (macOS included) and .dll on Windows.
+          # Per-platform name: rast-<os>-<arch>. Erlang loads NIFs as .so on all
+          # Unix (macOS included) and .dll on Windows.
           case "$RUNNER_OS" in
-            Windows) cp native/rast/target/release/rast.dll     priv/rast.dll ;;
-            macOS)   cp native/rast/target/release/librast.dylib priv/rast.so ;;
-            *)       cp native/rast/target/release/librast.so    priv/rast.so ;;
+            Windows) SRC=native/rast/target/release/rast.dll;      OS=windows; EXT=dll ;;
+            macOS)   SRC=native/rast/target/release/librast.dylib; OS=darwin;  EXT=so ;;
+            *)       SRC=native/rast/target/release/librast.so;     OS=linux;   EXT=so ;;
           esac
+          case "$(uname -m)" in arm64|aarch64) ARCH=aarch64 ;; *) ARCH=x86_64 ;; esac
+          cp "$SRC" "priv/rast-${OS}-${ARCH}.${EXT}"
 
       - name: Test
         shell: bash
@@ -56,5 +59,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rast-nif-${{ runner.os }}
-          path: priv/rast.*
+          path: priv/rast-*
           if-no-files-found: error

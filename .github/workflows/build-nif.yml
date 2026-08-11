@@ -1,0 +1,76 @@
+name: Build NIF binaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'native/**'
+      - 'Makefile'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Build the per-platform prebuilt NIFs (rast-<os>-<arch>) and commit them so the
+# hex package works without a Rust toolchain. Jobs run sequentially: each commits
+# one binary and rebases on the previous one before pushing.
+jobs:
+  linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build & commit
+        run: |
+          cargo build --release --manifest-path native/rast/Cargo.toml
+          mkdir -p priv
+          cp native/rast/target/release/librast.so priv/rast-linux-x86_64.so
+          bash .github/commit-nif.sh priv/rast-linux-x86_64.so "Linux x86_64"
+
+  darwin-aarch64:
+    needs: linux-x86_64
+    runs-on: macos-latest        # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build & commit
+        run: |
+          cargo build --release --manifest-path native/rast/Cargo.toml
+          mkdir -p priv
+          cp native/rast/target/release/librast.dylib priv/rast-darwin-aarch64.so
+          bash .github/commit-nif.sh priv/rast-darwin-aarch64.so "macOS aarch64"
+
+  darwin-x86_64:
+    needs: darwin-aarch64
+    runs-on: macos-13            # Intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build & commit
+        run: |
+          cargo build --release --manifest-path native/rast/Cargo.toml
+          mkdir -p priv
+          cp native/rast/target/release/librast.dylib priv/rast-darwin-x86_64.so
+          bash .github/commit-nif.sh priv/rast-darwin-x86_64.so "macOS x86_64"
+
+  windows-x86_64:
+    needs: darwin-x86_64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build & commit
+        shell: bash
+        run: |
+          cargo build --release --manifest-path native/rast/Cargo.toml
+          mkdir -p priv
+          cp native/rast/target/release/rast.dll priv/rast-windows-x86_64.dll
+          bash .github/commit-nif.sh priv/rast-windows-x86_64.dll "Windows x86_64"

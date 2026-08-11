@@ -1,6 +1,10 @@
-# Native NIF is a build artifact — built via `make build`, not committed.
-# (A future CI can ship per-platform prebuilt binaries like sied does.)
-priv/
+# priv/ holds only the per-platform prebuilt NIFs (rast-<os>-<arch>), which the
+# CI build-nif workflow produces and commits so the hex package works without a
+# Rust toolchain. Ignore everything else that lands there.
+priv/*
+!priv/rast-*.so
+!priv/rast-*.dll
+!priv/rast-*.dylib
 
 # ---> Erlang
 .rebar3

@@ -16,9 +16,10 @@
         "native/rast/src/lib.rs",
         "native/rast/Cargo.toml",
         "native/rast/Cargo.lock",
-        "priv/rast.dll",
-        "priv/rast.so",
-        "priv/rast.dylib",
+        "priv/rast-linux-x86_64.so",
+        "priv/rast-darwin-x86_64.so",
+        "priv/rast-darwin-aarch64.so",
+        "priv/rast-windows-x86_64.dll",
         "rebar.config", "Makefile", "README*", "CHANGELOG*", "LICENSE*", "NOTICE*"
     ]}
 ]}.

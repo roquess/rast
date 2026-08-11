@@ -49,20 +49,35 @@ rast/
 └── Makefile
 ```
 
-## Build & test
+## Install
 
-The native NIF is built out-of-band (like sied): a precompiled
-`priv/rast.{dll,so,dylib}` is loaded at runtime.
+```erlang
+%% rebar.config
+{deps, [{rast, "0.1.0"}]}.
+```
+
+**No Rust toolchain required.** The package ships a per-platform prebuilt NIF
+(`priv/rast-<os>-<arch>`) for Linux x86_64, macOS x86_64 + aarch64, and Windows
+x86_64; the right one is selected at load time. (Each platform gets its own file
+because Erlang loads NIFs as `.so` on every Unix — macOS included — so Linux and
+macOS cannot share a single `rast.so`.)
+
+GDAL (`gdalinfo`, `gdal_translate`) is only needed for the `rast_gdal` /
+`process_band` / `process_convolution` I/O paths, not for the kernels.
+
+## Build & test (from source)
+
+For development or an unsupported platform, build the NIF locally:
 
 ```bash
-make build      # cargo build --release + copy the lib into priv/
+make build      # cargo build --release -> priv/rast-<os>-<arch>
 make test       # rebar3 ct
 make bench      # bandwidth microbenchmark
 ```
 
-Requirements: Erlang/OTP 25+, Rust 1.80+ (Cargo in `PATH`).
-Tests that don't need the NIF (tiling geometry) run without a build; kernel
-tests skip cleanly until `make build` has run.
+Requirements to build: Erlang/OTP 25+, Rust 1.80+ (Cargo in `PATH`). The
+platform binaries shipped in the package are produced and committed by the
+`build-nif` CI workflow.
 
 ## Kernels (implemented)
 

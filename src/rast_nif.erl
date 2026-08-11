@@ -22,20 +22,41 @@
 -on_load(init/0).
 
 -define(APPNAME, rast).
--define(LIBNAME, rast).
 
 %% @private
+%% @doc Load the platform-specific prebuilt NIF. Each platform ships its own
+%% file (`rast-<os>-<arch>') so a single hex package carries working binaries
+%% for Linux, macOS (x86_64 + aarch64) and Windows without a filename clash
+%% (Erlang loads NIFs as `.so' on every Unix, macOS included, and `.dll' on
+%% Windows — so Linux and macOS could not otherwise share `rast.so').
 init() ->
-    SoName = case code:priv_dir(?APPNAME) of
-        {error, bad_name} ->
-            case filelib:is_dir(filename:join(["..", priv])) of
-                true  -> filename:join(["..", priv, ?LIBNAME]);
-                false -> filename:join([priv, ?LIBNAME])
-            end;
-        Dir ->
-            filename:join(Dir, ?LIBNAME)
-    end,
-    erlang:load_nif(SoName, 0).
+    PrivDir = case code:priv_dir(?APPNAME) of
+                  {error, bad_name} ->
+                      case filelib:is_dir(filename:join(["..", priv])) of
+                          true  -> filename:join(["..", priv]);
+                          false -> "priv"
+                      end;
+                  Dir ->
+                      Dir
+              end,
+    Base = "rast-" ++ os_tag() ++ "-" ++ arch_tag(),
+    erlang:load_nif(filename:join(PrivDir, Base), 0).
+
+os_tag() ->
+    case os:type() of
+        {unix, darwin} -> "darwin";
+        {win32, _}     -> "windows";
+        {unix, _}      -> "linux"
+    end.
+
+arch_tag() ->
+    Low = string:lowercase(erlang:system_info(system_architecture)),
+    HasAarch = string:find(Low, "aarch64") =/= nomatch
+        orelse string:find(Low, "arm64") =/= nomatch,
+    case HasAarch of
+        true  -> "aarch64";
+        false -> "x86_64"   % Windows reports "win32"; default to x86_64
+    end.
 
 %% @doc Decode a little-endian `u16' tile binary to a little-endian `f32'
 %% binary, multiplying each sample by `Scale' (`1.0' for a plain widening cast).
