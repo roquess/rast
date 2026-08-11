@@ -45,6 +45,11 @@ jobs:
           esac
 
       - name: Test
+        shell: bash
+        env:
+          # GitHub's Windows runner has no usable GDAL; skip the GDAL-backed
+          # tests there (kernels, tiling, convolution and orchestration still run).
+          RAST_NO_GDAL: ${{ runner.os == 'Windows' && '1' || '' }}
         run: rebar3 ct
 
       - name: Upload prebuilt NIF

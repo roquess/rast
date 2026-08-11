@@ -51,10 +51,40 @@ init_per_suite(Config) ->
         catch
             error:_ -> false
         end,
-    [{nif_loaded, NifLoaded}, {gdal, rast_gdal:available()} | Config].
+    %% RAST_NO_GDAL=1 force-skips the GDAL tests (e.g. CI runners without GDAL).
+    Gdal = (os:getenv("RAST_NO_GDAL") =/= "1") andalso rast_gdal:available(),
+    [{nif_loaded, NifLoaded}, {gdal, Gdal} | Config].
 
 end_per_suite(_Config) ->
     ok.
+
+%% Real CT skipping happens here: a `{skip, _}' returned from a test body is
+%% ignored, so requirements are gated per test case instead.
+init_per_testcase(TC, Config) ->
+    NifOK  = ?config(nif_loaded, Config),
+    GdalOK = ?config(gdal, Config),
+    case lists:member(TC, gdal_cases()) andalso not GdalOK of
+        true ->
+            {skip, "GDAL not available"};
+        false ->
+            case lists:member(TC, nif_cases()) andalso not NifOK of
+                true  -> {skip, "native NIF not built — run `make build`"};
+                false -> Config
+            end
+    end.
+
+end_per_testcase(_TC, _Config) ->
+    ok.
+
+gdal_cases() ->
+    [gdal_read_window, gdal_write_roundtrip, process_band_ndvi,
+     process_convolution_identity, process_convolution_valid].
+
+nif_cases() ->
+    [decode_u16_roundtrip, decode_u16_scaled, decode_u16_odd_length,
+     ndvi_u16_basic, ndvi_u16_zero_denominator, ndvi_u16_length_mismatch,
+     ndvi_f32_basic, convolve_identity, convolve_box_blur, convolve_bad_dims,
+     pad_replicate_basic, process_tiles_with_kernel | gdal_cases()].
 
 %%%===================================================================
 %%% Pure: metadata + tiling geometry
@@ -335,11 +365,9 @@ process_convolution_valid(Cfg) ->
 %%% Helpers
 %%%===================================================================
 
-need_gdal(Cfg) ->
-    case ?config(gdal, Cfg) of
-        true  -> ok;
-        false -> {skip, "GDAL not available"}
-    end.
+%% Kept as no-ops for readability at the top of each test; the actual skipping
+%% is done in init_per_testcase/2.
+need_gdal(_Cfg) -> ok.
 
 %% Write a WxH single-band UInt16 ENVI raster (raw + .hdr). GDAL reads ENVI
 %% natively, so this needs no gdal invocation to create. Returns the data path.
@@ -358,11 +386,7 @@ dup(V, N) -> [V || _ <- lists:seq(1, N)].
 
 u16_list(Bin) -> [V || <<V:16/unsigned-little>> <= Bin].
 
-need_nif(Cfg) ->
-    case ?config(nif_loaded, Cfg) of
-        true  -> ok;
-        false -> {skip, "native NIF not built — run `make build`"}
-    end.
+need_nif(_Cfg) -> ok.
 
 u16_bin(Vals) -> << <<V:16/unsigned-little>> || V <- Vals >>.
 
