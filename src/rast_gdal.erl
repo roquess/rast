@@ -43,10 +43,15 @@
 %%% Discovery
 %%%===================================================================
 
-%% @doc Whether the GDAL CLI can be located.
+%% @doc Whether the GDAL CLI can actually be run. Probes by executing
+%% `gdalinfo --version'; a missing or non-runnable binary yields `false' (so the
+%% GDAL-backed tests skip cleanly rather than fail).
 -spec available() -> boolean().
 available() ->
-    filelib:is_regular(exe("gdalinfo")).
+    case run(exe("gdalinfo"), ["--version"]) of
+        {ok, _} -> true;
+        _       -> false
+    end.
 
 %%%===================================================================
 %%% Read side

@@ -37,10 +37,11 @@ jobs:
         run: |
           cargo build --release --manifest-path native/rast/Cargo.toml
           mkdir -p priv
+          # Erlang loads NIFs as .so on all Unix (macOS included) and .dll on Windows.
           case "$RUNNER_OS" in
-            Windows) cp native/rast/target/release/rast.dll priv/rast.dll ;;
-            macOS)   cp native/rast/target/release/librast.dylib priv/rast.dylib ;;
-            *)       cp native/rast/target/release/librast.so priv/rast.so ;;
+            Windows) cp native/rast/target/release/rast.dll     priv/rast.dll ;;
+            macOS)   cp native/rast/target/release/librast.dylib priv/rast.so ;;
+            *)       cp native/rast/target/release/librast.so    priv/rast.so ;;
           esac
 
       - name: Test
