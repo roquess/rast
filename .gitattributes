@@ -1,0 +1,8 @@
+# Normalize line endings: text is LF in the repo (and working tree), so shell
+# scripts and CI files never get CRLF, and there's no Windows churn.
+* text=auto eol=lf
+
+# Prebuilt NIFs and other binaries must never be line-ending normalized.
+*.so     binary
+*.dylib  binary
+*.dll    binary
