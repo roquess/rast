@@ -29,38 +29,30 @@ jobs:
           cp native/rast/target/release/librast.so priv/rast-linux-x86_64.so
           bash .github/commit-nif.sh priv/rast-linux-x86_64.so "Linux x86_64"
 
-  darwin-aarch64:
+  # One Apple Silicon runner builds both macOS arches: aarch64 natively and
+  # x86_64 by cross-compiling (avoids depending on the scarce Intel runner).
+  darwin:
     needs: linux-x86_64
-    runs-on: macos-latest        # Apple Silicon
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
-      - name: Build & commit
+        with:
+          targets: x86_64-apple-darwin
+      - name: Build & commit (aarch64 + x86_64)
         run: |
-          cargo build --release --manifest-path native/rast/Cargo.toml
           mkdir -p priv
+          cargo build --release --manifest-path native/rast/Cargo.toml
           cp native/rast/target/release/librast.dylib priv/rast-darwin-aarch64.so
+          cargo build --release --target x86_64-apple-darwin --manifest-path native/rast/Cargo.toml
+          cp native/rast/target/x86_64-apple-darwin/release/librast.dylib priv/rast-darwin-x86_64.so
           bash .github/commit-nif.sh priv/rast-darwin-aarch64.so "macOS aarch64"
-
-  darwin-x86_64:
-    needs: darwin-aarch64
-    runs-on: macos-13            # Intel
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Build & commit
-        run: |
-          cargo build --release --manifest-path native/rast/Cargo.toml
-          mkdir -p priv
-          cp native/rast/target/release/librast.dylib priv/rast-darwin-x86_64.so
           bash .github/commit-nif.sh priv/rast-darwin-x86_64.so "macOS x86_64"
 
   windows-x86_64:
-    needs: darwin-x86_64
+    needs: darwin
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
