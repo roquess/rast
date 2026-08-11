@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: build & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: '27'
+          rebar3-version: '3'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install GDAL (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y gdal-bin
+
+      - name: Install GDAL (macOS)
+        if: runner.os == 'macOS'
+        run: brew install gdal
+
+      - name: Build NIF
+        shell: bash
+        run: |
+          cargo build --release --manifest-path native/rast/Cargo.toml
+          mkdir -p priv
+          case "$RUNNER_OS" in
+            Windows) cp native/rast/target/release/rast.dll priv/rast.dll ;;
+            macOS)   cp native/rast/target/release/librast.dylib priv/rast.dylib ;;
+            *)       cp native/rast/target/release/librast.so priv/rast.so ;;
+          esac
+
+      - name: Test
+        run: rebar3 ct
+
+      - name: Upload prebuilt NIF
+        uses: actions/upload-artifact@v4
+        with:
+          name: rast-nif-${{ runner.os }}
+          path: priv/rast.*
+          if-no-files-found: error
