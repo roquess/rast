@@ -14,6 +14,6 @@ if git diff --staged --quiet; then
   echo "$FILE unchanged, nothing to commit"
 else
   git commit -m "ci: update $LABEL NIF [skip ci]"
-  git pull --rebase origin main
+  git pull --rebase --autostash origin main
   git push
 fi

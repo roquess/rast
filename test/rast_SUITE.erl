@@ -93,7 +93,7 @@ nif_cases() ->
 version_is_binary(_Cfg) ->
     V = rast:version(),
     true = is_binary(V),
-    <<"0.1.0">> = V.
+    <<"0.1.1">> = V.
 
 tile_count_exact(_Cfg) ->
     4 = rast_tiling:tile_count(1024, 1024, 512, 512).
